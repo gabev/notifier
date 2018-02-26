@@ -2,10 +2,10 @@ const fcmAdmin = require('firebase-admin');
 const nodemailer = require('nodemailer');
 
 class NotificationSender {
-  constructor(fcmAuthFile, emailTransporterRequired) {
+  constructor(fcmAuthFile, emailTransporter) {
     this.upFCMServer(fcmAuthFile);
-    this.createEmailTransporter(emailTransporterRequired);
-    this.from = emailTransporterRequired.user;
+    this.createEmailTransporter(emailTransporter);
+    this.from = emailTransporter.auth.user;
   }
 
   upFCMServer(fcmAuthFile) {
@@ -15,14 +15,8 @@ class NotificationSender {
     });
   }
 
-  createEmailTransporter(emailTransporterRequired) {
-    this.emailTransporter = nodemailer.createTransport({
-      auth: {
-        user: emailTransporterRequired.user,
-        pass: emailTransporterRequired.pass,
-      },
-      service: emailTransporterRequired.service
-    });
+  createEmailTransporter(emailTransporter) {
+    this.emailTransporter = nodemailer.createTransport(emailTransporter);
   }
 
   sendMessage(message, destination, notificationType) {
