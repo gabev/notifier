@@ -1,8 +1,8 @@
 module.exports = {
   emailTransport: {
-    host: 'host', port: 587, secure: false, auth: { user: 'user', pass: 'pass' }
+    host: 'email host', port: 587, secure: false, auth: { user: 'user', pass: 'password' }
   },
-  serviceUserBrainkey: 'your system user brainkey',
+  serviceUserBrainkey: 'your service user brainkey',
   defaultAssets: ['BTS', 'OPEN.EOS', 'USD', 'OPEN.OMG', 'CNY',
     'OPEN.LTC', 'TRFND', 'OPEN.BTC'],
   deliveryMethods: ['email'],
@@ -36,11 +36,11 @@ module.exports = {
   templates: {
     transfer: {
       subject: 'Bitshares transfer',
-      body: (value, symbol) => `You just received ${value} ${symbol}`
+      body: (from, to, value, symbol) => `${from} sent ${value} ${symbol} to ${to}`
     },
     fill_order: {
       subject: 'Fill order',
-      body: (action, amount, symbol, price, baseSymbol, quoteSymbol) => `${action} ${amount} ${symbol} at ${price} ${baseSymbol}/${quoteSymbol}`
+      body: (user, action, amount, symbol, price, baseSymbol, quoteSymbol) => `${user} ${action} ${amount} ${symbol} at ${price} ${baseSymbol}/${quoteSymbol}`
     }
   }
 };

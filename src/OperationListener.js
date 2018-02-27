@@ -65,7 +65,10 @@ class OperationListener {
     const operation = source.op[1];
     const transferAsset = await this.findAsset(operation.amount.asset_id);
     const value = getRealCost(operation.amount.amount, transferAsset.precision);
-    return { subject: config.templates.transfer.subject, body: config.templates.transfer.body(value, transferAsset.symbol) };
+    const userFromId = operation.from;
+    const userToId = operation.to;
+    const [userFrom, userTo] = await this.getUsers([userFromId, userToId]);
+    return { subject: config.templates.transfer.subject, body: config.templates.transfer.body(userFrom.name, userTo.name, value, transferAsset.symbol) };
   }
 
   async processFillOrder(source) {
@@ -83,6 +86,9 @@ class OperationListener {
     const { transactions } = await Apis.instance().db_api().exec('get_block', [blockNum]);
     const myTransaction = transactions[trxInBlock];
 
+    const userId = myTransaction.operations[0][1].seller;
+    const [user] = await this.getUsers([userId]);
+
     const isBid = myTransaction.operations[0][1].amount_to_sell.asset_id === myTransaction.operations[0][1].fee.asset_id;
 
     const priceBase = (isBid) ? operation.receives : operation.pays;
@@ -99,7 +105,10 @@ class OperationListener {
     const baseAsset = await this.findAsset(priceBase.asset_id);
     const quoteAsset = await this.findAsset(priceQuote.asset_id);
     const price = formatPrice(priceBase.amount / priceQuote.amount, baseAsset, quoteAsset);
-    return { subject: config.templates.fill_order.subject, body: config.templates.fill_order.body(fillOrderSide, orderValue.amount, orderValue.symbol, price, baseAsset.symbol, quoteAsset.symbol) };
+    return {
+      subject: config.templates.fill_order.subject,
+      body: config.templates.fill_order.body(user.name, fillOrderSide, orderValue.amount, orderValue.symbol, price, baseAsset.symbol, quoteAsset.symbol)
+    };
   }
 
   async findAsset(assetId) {
@@ -114,6 +123,11 @@ class OperationListener {
       [foundAsset] = await Apis.instance().db_api().exec('lookup_asset_symbols', [[assetId]]);
     }
     return foundAsset;
+  }
+
+  async getUsers(usersIds) {
+    const users = await Apis.instance().db_api().exec('get_objects', [usersIds]);
+    return users;
   }
 }
 
